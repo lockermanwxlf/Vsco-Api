@@ -68,3 +68,30 @@ def get_site_id(username: str, strict: bool = False) -> str | None:
     
     return profiles[0]['siteId'] if not strict or profiles[0]['siteSubDomain'] == username else None
 
+def get_media_page(site_id: str, cursor: str | None = None) -> tuple[list[VscoMedia], str]:
+    '''
+    Returns a tuple containing a list of posts in a page and a cursor string for the next page.
+    
+    Raises `HTTPError` on `response.raise_for_status()`.
+    '''
+    global headers
+    params = {
+        'site_id': site_id,
+        'limit': 20
+    }
+    if cursor: params['cursor'] = cursor
+    
+    response = requests.get(
+        url=f'https://vsco.co/api/3.0/medias/profile',
+        headers=headers,
+        params=params)
+    
+    response.raise_for_status()
+    response = response.json()
+    posts = [
+        VscoMedia(VscoMediaType.IMAGE, f'https://{media[media['type']]['responsive_url']}', media[media['type']]['upload_date'])
+        if media['type'] == 'image' 
+        else VscoMedia(VscoMediaType.VIDEO, media[media['type']]['playback_url'], media[media['type']]['created_date'])
+        for media in response['media']]
+    return (posts, response.get('next_cursor'))
+
