@@ -122,7 +122,7 @@ class ProfileIterator:
         
         if self.cursor == None:
             self.end_reached = True
-        if self.cursor == old_cursor: 
+        elif self.cursor == old_cursor: 
             raise StopIteration
         
         return self.medias
