@@ -100,15 +100,23 @@ class ProfileIterator:
         self.cursor = None
         self.medias = []
         self.site_id = site_id
+        self.end_reached = False
         
     def __iter__(self):
         self.cursor = None
         self.medias = []
+        self.end_reached = False
         return self
     
     def __next__(self):
+        if self.end_reached:
+            raise StopIteration
+        
         old_cursor = self.cursor
         self.medias, self.cursor = get_media_page(self.site_id, self.cursor)
+        
+        if self.cursor == None:
+            self.end_reached = True
         if self.cursor == old_cursor: 
             raise StopIteration
         
