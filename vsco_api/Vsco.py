@@ -95,3 +95,21 @@ def get_media_page(site_id: str, cursor: str | None = None) -> tuple[list[VscoMe
         for media in response['media']]
     return (posts, response.get('next_cursor'))
 
+class ProfileIterator:
+    def __init__(self, site_id: str) -> None:
+        self.cursor = None
+        self.medias = []
+        self.site_id = site_id
+        
+    def __iter__(self):
+        self.cursor = None
+        self.medias = []
+        return self
+    
+    def __next__(self):
+        old_cursor = self.cursor
+        self.medias, self.cursor = get_media_page(self.site_id, self.cursor)
+        if self.cursor == old_cursor: 
+            raise StopIteration
+        
+        return self.medias
