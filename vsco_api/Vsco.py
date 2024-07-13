@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+import requests
 
 class VscoMediaType(Enum):
     IMAGE = 0
@@ -40,3 +41,30 @@ def set_bearer_token(value: str):
     bearer_token = value
     headers['authorization'] = bearer_token
     
+def get_site_id(username: str, strict: bool = False) -> str | None:
+    '''
+    Returns the site_id for the first profile returned by searching for `username`.
+    
+    If `strict` is true, returns `None` if the returned profile's username does not equal `username`.
+    
+    Also returns `None` if no profiles are returned.
+    
+    Raises `HTTPError` on `response.raise_for_status()`.
+    '''
+    global headers
+    response = requests.get(
+        url='https://vsco.co/api/2.0/search/grids',
+        headers=headers,
+        params={
+            'query': username,
+            'page': 0,
+            'size': 7
+        })
+    
+    response.raise_for_status()
+    profiles = response.json()['results']
+    if len(profiles) == 0:
+        return None
+    
+    return profiles[0]['siteId'] if not strict or profiles[0]['siteSubDomain'] == username else None
+
