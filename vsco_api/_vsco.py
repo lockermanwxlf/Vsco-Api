@@ -4,7 +4,8 @@ import requests
 
 class VscoMediaType(Enum):
     IMAGE = 0
-    VIDEO = 1
+    VIDEO_M3U8 = 1
+    VIDEO_MP4 = 2
 
 @dataclass
 class VscoMedia:
@@ -89,9 +90,13 @@ def get_media_page(site_id: str, cursor: str | None = None) -> tuple[list[VscoMe
     response.raise_for_status()
     response = response.json()
     posts = [
-        VscoMedia(VscoMediaType.IMAGE, f'https://{media[media['type']]['responsive_url']}', media[media['type']]['upload_date'])
+        (
+            VscoMedia(VscoMediaType.IMAGE, f'https://{media[media['type']]['responsive_url']}', media[media['type']]['upload_date'])
+            if not media[media['type']]['is_video']
+            else VscoMedia(VscoMediaType.VIDEO_MP4, f'https://{media[media['type']]['video_url']}', media[media['type']]['upload_date'])
+        ) 
         if media['type'] == 'image' 
-        else VscoMedia(VscoMediaType.VIDEO, media[media['type']]['playback_url'], media[media['type']]['created_date'])
+        else VscoMedia(VscoMediaType.VIDEO_M3U8, media[media['type']]['playback_url'], media[media['type']]['created_date'])
         for media in response['media']]
     return (posts, response.get('next_cursor'))
 
